@@ -1,8 +1,8 @@
-
 let selectedVoice = null;
 const voiceSelect = document.getElementById("voiceSelect");
 const btn = document.querySelector('.talk');
 const content = document.querySelector('.content');
+let initialized = false; // control intro once
 
 // ✅ Load and populate voices
 function populateVoices() {
@@ -39,6 +39,7 @@ voiceSelect?.addEventListener("change", () => {
 window.speechSynthesis.onvoiceschanged = populateVoices;
 populateVoices();
 
+// ✅ Speak Function
 function speak(text) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1;
@@ -51,10 +52,9 @@ function speak(text) {
     logHistory?.("VIONA", text);
 }
 
+// ✅ Greeting based on time
 function wishMe() {
-    var day = new Date();
-    var hour = day.getHours();
-
+    const hour = new Date().getHours();
     if (hour >= 0 && hour < 12) {
         speak("Good Morning Boss...");
     } else if (hour >= 12 && hour < 17) {
@@ -64,12 +64,22 @@ function wishMe() {
     }
 }
 
-window.addEventListener('load', () => {
-    speak("Initializing VIONA...");
-    wishMe();
-    speak("Boot complete. Hello Sunny — Computer Science prodigy, code slayer, and bug hunter. I’m VIONA, tuned into your rhythm. Let’s make some tech magic happen.");
-});
+// ✅ Intro Speech (runs once on first mic click)
+function speakIntro() {
+    setTimeout(() => {
+        speak("Initializing VIONA...");
+    }, 500);
 
+    setTimeout(() => {
+        wishMe();
+    }, 2500);
+
+    setTimeout(() => {
+        speak("Boot complete. Hello Sunny — Computer Science prodigy, code slayer, and bug hunter. I’m VIONA, tuned into your rhythm. Let’s make some tech magic happen.");
+    }, 5000);
+}
+
+// ✅ Start Speech Recognition
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 
@@ -81,11 +91,18 @@ recognition.onresult = (event) => {
     takeCommand(transcript.toLowerCase());
 };
 
+// ✅ Mic Click Event
 btn.addEventListener('click', () => {
     content.textContent = "Listening...";
     recognition.start();
+
+    if (!initialized) {
+        speakIntro();
+        initialized = true;
+    }
 });
 
+// ✅ Command Logic
 function takeCommand(message) {
     if (message.includes('hey') || message.includes('hello')) {
         speak("Hello Sir, Myself VIONA, Virtual Intelligent Online Assistant, How May I Help You?");
@@ -94,42 +111,37 @@ function takeCommand(message) {
         speak("Opening Google...");
     } else if (message.includes("open youtube")) {
         window.open("https://youtube.com", "_blank");
-        speak("Opening Youtube...");
+        speak("Launching YouTube...");
     } else if (message.includes("open facebook")) {
         window.open("https://facebook.com", "_blank");
-        speak("Opening Facebook...");
+        speak("Bringing up Facebook...");
     } else if (message.includes('what is') || message.includes('who is') || message.includes('what are')) {
         window.open(`https://www.google.com/search?q=${message.replace(" ", "+")}`, "_blank");
-        const finalText = "This is what I found on the internet regarding " + message;
-        speak(finalText);
+        speak("Here's what I found online regarding " + message);
     } else if (message.includes('wikipedia')) {
         window.open(`https://en.wikipedia.org/wiki/${message.replace("wikipedia", "").trim()}`, "_blank");
-        const finalText = "This is what I found on Wikipedia regarding " + message;
-        speak(finalText);
+        speak("This is what I found on Wikipedia about " + message);
     } else if (message.includes('time')) {
-        const time = new Date().toLocaleString(undefined, { hour: "numeric", minute: "numeric" });
-        const finalText = "The current time is " + time;
-        speak(finalText);
+        const time = new Date().toLocaleTimeString();
+        speak("The current time is " + time);
     } else if (message.includes('date')) {
-        const date = new Date().toLocaleString(undefined, { month: "short", day: "numeric" });
-        const finalText = "Today's date is " + date;
-        speak(finalText);
+        const date = new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+        speak("Today is " + date);
     } else if (message.includes("who made you")) {
-        speak("I was developed by Sunny Sharma, a passionate software developer.");
+        speak("I was crafted by Sunny Sharma, a visionary developer and relentless learner.");
     } else if (message.includes("linkedin profile")) {
         window.open("https://www.linkedin.com/in/sunny-sharma-2487312a7", "_blank");
-        speak("Opening your LinkedIn profile...");
+        speak("Opening Sunny Sharma's LinkedIn profile.");
     } else if (message.includes("github profile")) {
         window.open("https://github.com/SunnySharma04", "_blank");
-        speak("Opening your Github profile...");
+        speak("Here's Sunny's GitHub profile.");
     } else if (message.includes("motivate me")) {
-        speak("Don't watch the clock; do what it does. Keep going.");
+        speak("Push yourself, because no one else is going to do it for you.");
     } else if (message.includes("tell me a fun fact")) {
-        speak("Did you know? Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3000 years old and still perfectly good to eat.");
+        speak("Did you know? Bananas are berries, but strawberries aren't.");
     } else if (message.includes('calculator')) {
         window.open('Calculator:///', '_blank');
-        const finalText = "Opening Calculator";
-        speak(finalText);
+        speak("Launching calculator.");
     } else if (message.includes("dark mode")) {
         document.body.classList.add("dark-theme");
         document.body.classList.remove("light-theme");
@@ -137,14 +149,14 @@ function takeCommand(message) {
     } else if (message.includes("light mode")) {
         document.body.classList.add("light-theme");
         document.body.classList.remove("dark-theme");
-        speak("Light mode activated.");
+        speak("Light mode is now on.");
     } else {
         window.open(`https://www.google.com/search?q=${message.replace(" ", "+")}`, "_blank");
-        const finalText = "I found some information for " + message + " on Google";
-        speak(finalText);
+        speak("Here's what I found for " + message + " on Google.");
     }
 }
 
+// ✅ Chat Log Utility
 function logHistory(user, message) {
     const log = document.getElementById("historyLog");
     if (!log) return;
